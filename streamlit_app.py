@@ -9,6 +9,18 @@ import altair as alt
 
 import lab_loop
 
+st.sidebar.subheader("Cloud training")
+
+if st.sidebar.button("Run 1 lab cycle in the cloud 🚀"):
+    with st.spinner("Running one lab cycle in the cloud (this may take a few minutes)..."):
+        # Run exactly one cycle so it doesn't take forever
+        lab_loop.run_one_cycle(1)
+
+    st.sidebar.success("Finished lab cycle! Reloading experiments...")
+    # Clear any cached data and rerun the app so new results show up
+    st.cache_data.clear()
+    st.rerun()
+
 # ---------- Helpers ----------
 
 def load_experiments(path: str = "logs/experiment_log.jsonl") -> pd.DataFrame:
