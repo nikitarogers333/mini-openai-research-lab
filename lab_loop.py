@@ -29,9 +29,18 @@ def run_one_cycle(cycle_idx: int):
     print("============================================================\n")
 
 
-def main():
-    for i in range(1, 4):
+def run_lab(cycles: int = 1):
+    """
+    Entry point for UI / programmatic calls.
+    Runs `cycles` full lab cycles in sequence.
+    """
+    for i in range(1, cycles + 1):
         run_one_cycle(i)
+
+
+def main():
+    # CLI usage: same behavior as before (3 cycles)
+    run_lab(cycles=3)
 
 
 if __name__ == "__main__":

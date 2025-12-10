@@ -7,10 +7,11 @@ import pandas as pd
 import streamlit as st
 import altair as alt
 
+import lab_loop
 
 # ---------- Helpers ----------
 
-def load_experiments(path: str = "results/experiment_log.jsonl") -> pd.DataFrame:
+def load_experiments(path: str = "logs/experiment_log.jsonl") -> pd.DataFrame:
     """Load JSONL experiment log into a DataFrame."""
     if not os.path.exists(path):
         return pd.DataFrame()
@@ -328,3 +329,22 @@ st.dataframe(
     ),
     use_container_width=True,
 )
+
+
+
+st.sidebar.header("🚀 Run New Experiments")
+
+cycles = st.sidebar.number_input(
+    "Number of lab cycles",
+    min_value=1,
+    max_value=10,
+    value=1,
+    step=1,
+)
+
+if st.sidebar.button("Start lab run"):
+    with st.spinner("Running autonomous lab loop in the cloud..."):
+        lab_loop.run_lab(cycles=int(cycles))
+
+    st.success("Lab run complete. Reloading experiments...")
+    st.rerun()
