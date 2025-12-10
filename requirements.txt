@@ -52,7 +52,7 @@ streamlit==1.52.1
 sympy==1.14.0
 tenacity==9.1.2
 toml==0.10.2
-torch==2.2.2
+
 tornado==6.5.2
 tqdm==4.67.1
 typing-inspection==0.4.2
