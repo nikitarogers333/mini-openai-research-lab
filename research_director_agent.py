@@ -12,7 +12,7 @@ from typing import List, Dict, Any
 from openai import OpenAI
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-LOG_PATH = Path("logs/experiment_log.jsonl")
+LOG_PATH = Path("results/experiment_log.jsonl")
 
 
 def load_logs() -> List[Dict[str, Any]]:

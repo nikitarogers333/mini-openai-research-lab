@@ -16,7 +16,7 @@ import torch.nn as nn
 DEVICE = torch.device("cpu")
 
 ROOT = Path(__file__).resolve().parent
-LOG_DIR = ROOT / "logs"
+LOG_DIR = ROOT / "results"
 TASKS_DIR = ROOT / "tasks"
 LOG_DIR.mkdir(exist_ok=True)
 TASKS_DIR.mkdir(exist_ok=True)
