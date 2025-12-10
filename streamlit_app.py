@@ -9,14 +9,34 @@ import altair as alt
 
 import lab_loop
 
-st.sidebar.subheader("Cloud training")
+from pathlib import Path
 
-if st.sidebar.button("Run 1 lab cycle in the cloud 🚀"):
-    with st.spinner("Running one lab cycle in the cloud (this may take a few minutes)..."):
-        # Run exactly one cycle so it doesn't take forever
-        lab_loop.run_one_cycle(1)
+# ---------- Page config ----------
+st.set_page_config(
+    page_title="Mini OpenAI Research Lab Dashboard",
+    page_icon="🧪",
+    layout="wide",
+)
 
-    st.sidebar.success("Finished lab cycle! Reloading experiments...")
+# ---------- Sidebar: Cloud training controls ----------
+
+st.sidebar.header("🚀 Cloud Training")
+
+cycles = st.sidebar.number_input(
+    "Number of lab cycles to run in the cloud",
+    min_value=1,
+    max_value=10,
+    value=1,
+    step=1,
+)
+
+if st.sidebar.button("Run lab cycles in the cloud 🚀"):
+    with st.spinner("Running autonomous lab loop in the cloud..."):
+        # Run the requested number of cycles
+        for i in range(int(cycles)):
+            lab_loop.run_one_cycle(i + 1)
+
+    st.sidebar.success("Lab run complete. Reloading experiments...")
     # Clear any cached data and rerun the app so new results show up
     st.cache_data.clear()
     st.rerun()
@@ -83,13 +103,7 @@ def get_best_experiment(df: pd.DataFrame) -> pd.Series | None:
     return df.loc[df["final_loss"].idxmin()]
 
 
-# ---------- Streamlit App ----------
-
-st.set_page_config(
-    page_title="Mini OpenAI Research Lab Dashboard",
-    page_icon="🧪",
-    layout="wide",
-)
+# ---------- Main App UI ----------
 
 st.title("🧪 Mini OpenAI Research Lab Dashboard")
 st.caption("Browse experiments, plots, and best configurations from your autonomous lab loop.")
@@ -101,8 +115,10 @@ df = load_experiments()
 
 if df.empty:
     st.error(
-        "No experiment logs found. "
-        "Make sure you've run `python lab_loop.py` and that `results/experiment_log.jsonl` exists."
+        "No experiment logs found yet.\n\n"
+        "- On your laptop: run `python lab_loop.py`, or\n"
+        "- Here in the cloud: use the sidebar button **“Run lab cycles in the cloud 🚀”**.\n\n"
+        "The lab will create `logs/experiment_log.jsonl`, and this dashboard will populate automatically."
     )
     st.stop()
 
@@ -186,6 +202,8 @@ if hidden_range is not None and "hidden" in df.columns:
 
 filtered_df = df[mask].copy()
 
+# ---------- Summary metrics ----------
+
 st.subheader("📊 Experiment Summary")
 
 col1, col2, col3 = st.columns(3)
@@ -232,7 +250,7 @@ else:
 
 st.divider()
 
-# ---------- Plots from log ----------
+# ---------- Plots from experiment log ----------
 
 st.subheader("📈 Hyperparameter Relationships")
 
@@ -250,14 +268,14 @@ else:
                 .encode(
                     x=alt.X("lr:Q", title="Learning rate", scale=alt.Scale(type="log")),
                     y=alt.Y("final_loss:Q", title="Final loss"),
-                    color=alt.Color("activation:N", title="Activation", legend=None)
+                    color=alt.Color("activation:N", title="Activation")
                     if "activation" in filtered_df.columns
                     else alt.value("#1f77b4"),
                     tooltip=list(filtered_df.columns),
                 )
                 .properties(height=300)
             )
-            st.altair_chart(chart, use_container_width=True)
+            st.altair_chart(chart)
         else:
             st.info("Need 'lr' and 'final_loss' columns to plot LR vs loss.")
 
@@ -270,14 +288,14 @@ else:
                 .encode(
                     x=alt.X("hidden:Q", title="Hidden size"),
                     y=alt.Y("final_loss:Q", title="Final loss"),
-                    color=alt.Color("scheduler:N", title="Scheduler", legend=None)
+                    color=alt.Color("scheduler:N", title="Scheduler")
                     if "scheduler" in filtered_df.columns
                     else alt.value("#ff7f0e"),
                     tooltip=list(filtered_df.columns),
                 )
                 .properties(height=300)
             )
-            st.altair_chart(chart, use_container_width=True)
+            st.altair_chart(chart)
         else:
             st.info("Need 'hidden' and 'final_loss' columns to plot hidden size vs loss.")
 
@@ -290,14 +308,14 @@ else:
                 .encode(
                     x=alt.X("epochs:Q", title="Max epochs"),
                     y=alt.Y("final_loss:Q", title="Final loss"),
-                    color=alt.Color("task:N", title="Task", legend=None)
+                    color=alt.Color("task:N", title="Task")
                     if "task" in filtered_df.columns
                     else alt.value("#2ca02c"),
                     tooltip=list(filtered_df.columns),
                 )
                 .properties(height=300)
             )
-            st.altair_chart(chart, use_container_width=True)
+            st.altair_chart(chart)
         else:
             st.info("Need 'epochs' and 'final_loss' columns to plot epochs vs loss.")
 
@@ -323,8 +341,8 @@ for title, fname in plot_files.items():
     if os.path.exists(full_path):
         with cols[idx % 2]:
             st.markdown(f"**{title}**")
-            st.image(full_path, use_column_width=True)
-    idx += 1
+            st.image(full_path)  # use_column_width deprecated; let Streamlit handle width
+        idx += 1
 
 if idx == 0:
     st.info("No images found in `plots/`. Run `visualize_results.py` and `interpretability_agent.py` first.")
@@ -335,28 +353,9 @@ st.divider()
 
 st.subheader("📄 Raw Experiment Table")
 
-st.dataframe(
-    filtered_df.sort_values(
-        by="final_loss" if "final_loss" in filtered_df.columns else filtered_df.columns[0]
-    ),
-    use_container_width=True,
-)
+if "final_loss" in filtered_df.columns:
+    df_to_show = filtered_df.sort_values(by="final_loss")
+else:
+    df_to_show = filtered_df
 
-
-
-st.sidebar.header("🚀 Run New Experiments")
-
-cycles = st.sidebar.number_input(
-    "Number of lab cycles",
-    min_value=1,
-    max_value=10,
-    value=1,
-    step=1,
-)
-
-if st.sidebar.button("Start lab run"):
-    with st.spinner("Running autonomous lab loop in the cloud..."):
-        lab_loop.run_lab(cycles=int(cycles))
-
-    st.success("Lab run complete. Reloading experiments...")
-    st.rerun()
+st.dataframe(df_to_show)
